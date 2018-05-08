@@ -5,5 +5,5 @@ Concepts visited:
 * Multi class classification
 * Random forest classifier
 * Multilayer perceptron
-* Custom transformation
-* Adding and reading metadata to dataframe columns
+* Custom Transformation in Python
+* Adding and reading metadata to Spark dataframe columns

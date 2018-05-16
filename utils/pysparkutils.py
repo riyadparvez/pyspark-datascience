@@ -1,4 +1,5 @@
-from pyspark.sql.functions import col
+from pyspark.ml.feature import StringIndexer
+from pyspark.sql.functions import col, lit
 from scipy.stats import entropy
 
 import math
@@ -12,6 +13,20 @@ def findMissingValuesCols(df):
         if c > 0:
             nullCols.append(c)
     return nullCols
+
+def autoIndexer(df, maxDistinct):
+    stringTypes = [dtype[0] for dtype in df.dtypes if dtype[1] == 'string']
+    indexed = df
+    indexedCols = []
+    for column in stringTypes:
+        distinctCount = df.select(column).distinct().count()
+        if distinctCount < maxDistinct:
+            indexedCol = 'Indexed' + column
+            indexedCols.append(indexedCol)
+            indexer = StringIndexer(inputCol=column, outputCol=indexedCol)
+            indexed = indexer.fit(indexed).transform(indexed)
+            indexed = indexed.drop(column)
+    return indexedCols, indexed
 
 def calcEntropy(df, *columns):
     n = df.count()
@@ -60,3 +75,9 @@ def calcMutualInformation(df, *columns):
 def calcNormalizedMutualInformation(df, col1, col2):
     entropies = calcEntropy(df, col1, col2)
     return (2* calcMutualInformation(df, col1, col2) / reduce(lambda x, y: x+y, entropies.values()))
+
+def stratifiedSampling(df, key, fraction):
+    fractions = df.select(key).distinct().withColumn("fraction", lit(fraction)).rdd.collectAsMap()
+    first = df.sampleBy(key, fractions, 42)
+    second = df.subtract(first)
+    return first, second

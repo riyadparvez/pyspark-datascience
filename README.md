@@ -1,9 +1,8 @@
 # pyspark-notebooks
 PySpark Jupyter notebooks
 
-Most of the notebooks are from Kaggle competitions or datasets from University of California at Irvine [Machine Learning Repository](http://archive.ics.uci.edu/ml/index.php)
 
-## Installation
+# Installation
 We provide a [pre-built docker image](https://hub.docker.com/r/riyadparvez/pyspark-notebooks/) for easy experimentation. The docker image is based on offical jupyter [pyspark-notebook](https://hub.docker.com/r/jupyter/pyspark-notebook/) image. Some additional packages have been installed.
 
 To pull the image:
@@ -20,3 +19,7 @@ Complete notebooks are:
 
 * [Titanic](https://nbviewer.jupyter.org/github/riyadparvez/pyspark-notebooks/blob/master/titanic/spark.ipynb)
 * [Wine Quality](https://nbviewer.jupyter.org/github/riyadparvez/pyspark-notebooks/blob/master/wine-quality/spark.ipynb)
+
+# Datasets
+
+Most of the notebooks are from Kaggle competitions or datasets from University of California at Irvine [Machine Learning Repository](http://archive.ics.uci.edu/ml/index.php). For UCI repositories, data are downloaded automatically in notebooks themselves. But for Kaggle datasets, you have to download the datasets yourself, since there is not good automated way to download those datasets.

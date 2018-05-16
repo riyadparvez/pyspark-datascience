@@ -6,11 +6,10 @@ import numpy as np
 import pandas as pd
 
 def findMissingValuesCols(df):
-    numRows = df.count()
     nullCols = []
     for column in df.columns:
-        c = df.filter(col(column).isNotNull()).count()
-        if c != numRows:
+        c = df.filter(col(column).isNull()).count()
+        if c > 0:
             nullCols.append(c)
     return nullCols
 

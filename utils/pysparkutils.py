@@ -40,16 +40,14 @@ def calcEntropy(df, *columns):
 
 def calcNormalizedEntropy(df, *columns):
     n = df.count()
-    entropies = {}
+    entropies = calcEntropy(df, *columns)
+    normalizedEntropies = {}
     for column in columns:
         distinct = df.agg(countDistinct(column)).collect()[0][0]
-        aggr = df.groupby(column).count()
-        rows = aggr.select((col('count') / n).alias('prob')).collect()
-        probs = [row[0] for row in rows]
-        entropy = scipy.stats.entropy(probs)
+        entropy = entropies[column]
         normalizedEntropy = entropy / math.log(distinct)
-        entropies[column] = normalizedEntropy
-    return entropies
+        normalizedEntropies[column] = normalizedEntropy
+    return normalizedEntropies
 
 def calcIndividualAndJointPorbablities(df, *columns):
     n = df.count()
@@ -97,6 +95,16 @@ def calcPointwiseMutualInformation(df, *columns):
         g = math.log(jointProb / reduce((lambda x, y: x * y), indProbs))
         pmi[k] = g
     return pmi
+
+def calcNormalizedPointwiseMutualInformation(df, *columns):
+    individualProbs, jointProbs = calcIndividualAndJointPorbablities(df, *columns)
+    npmi = {}
+    for k, v in jointProbs.items():
+        jointProb = v
+        indProbs = [individualProbs[ind] for ind in k]
+        pmi = math.log(jointProb / reduce((lambda x, y: x * y), indProbs))
+        npmi[k] = pmi / math.log(jointProb)
+    return npmi
 
 def calcNormalizedMutualInformation(df, col1, col2):
     entropies = calcEntropy(df, col1, col2)

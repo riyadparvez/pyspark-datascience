@@ -108,7 +108,7 @@ def calcIndividualAndJointPorbablities(df, *columns):
 # low mutual information indicates a small reduction;
 # and zero mutual information between two random variables means the
 # variables are independent.
-def calcMutualInformation(df, *columns):
+def calcMutualInformation(df, *columns) -> float:
     individualProbs, jointProbs = calcIndividualAndJointPorbablities(df, *columns)
     mutualInformation = 0
     for k, v in jointProbs.items():
@@ -142,7 +142,17 @@ def calcNormalizedPointwiseMutualInformation(df, *columns):
         npmi[k] = pmi / -math.log(jointProb)
     return npmi
 
-def calcNormalizedMutualInformation(df, col1, col2):
+def calcNormalizedPointwiseMutualInformationPandas(df, *columns):
+    npmi = calcNormalizedPointwiseMutualInformation(df, *columns)
+    dfCols = columns + ['Normalized PMI']
+    df_ = pd.DataFrame(columns=columns)
+    for k, v in nmpi:
+        npmi = v
+        l = [*list(k.values()), npmi]
+        print(l)
+        # for  in k.values():
+
+def calcNormalizedMutualInformation(df, col1, col2) -> float:
     entropies = calcEntropy(df, col1, col2)
     return (2* calcMutualInformation(df, col1, col2) / reduce(lambda x, y: x+y, entropies.values()))
 
@@ -154,3 +164,13 @@ def stratifiedSampling(df, key, fraction):
 
 def dictToPandasDF(dictionary, *columns):
     return pd.DataFrame(list(dictionary.items()), columns=[*columns])
+
+def toPandasDF(dictionary, targetCol, *columns):
+    dfCols =  [*columns, targetCol]
+    rows = []
+    for k, val in dictionary.items():
+        d = {key: val for key, val in k}
+        d[targetCol] = val
+        rows.append(d)
+    df_ = pd.DataFrame(rows, columns=dfCols).sort_values(by=list(columns))
+    return df_

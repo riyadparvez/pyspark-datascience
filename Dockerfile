@@ -13,6 +13,8 @@ ENV SPARK_OPTS --driver-java-options=-Xms1024M --driver-java-options=-Xmx8192M -
 
 USER $NB_UID
 
-RUN conda install --quiet -y nltk jupyterthemes
+# RUN conda config --append channels conda-forge
+RUN conda install --quiet -y nltk jupyterthemes ipdb
+# RUN conda install -c conda-forge jupyter-console || exit 0
 RUN jt -t chesterish
 EXPOSE 4040 8080

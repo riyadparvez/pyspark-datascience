@@ -1,10 +1,10 @@
 from pyspark.ml.feature import StringIndexer
-from pyspark.sql.functions import col, lit
-from scipy.stats import entropy
+from pyspark.sql.functions import col, countDistinct, lit
 
 import math
 import numpy as np
 import pandas as pd
+import scipy.stats
 
 def findMissingValuesCols(df):
     nullCols = []
@@ -35,7 +35,7 @@ def calcEntropy(df, *columns):
         aggr = df.groupby(column).count()
         rows = aggr.select((col('count') / n).alias('prob')).collect()
         probs = [row[0] for row in rows]
-        entropies[column] = entropy(probs)
+        entropies[column] = scipy.stats.entropy(probs)
     return entropies
 
 def calcNormalizedEntropy(df, *columns):
@@ -51,11 +51,7 @@ def calcNormalizedEntropy(df, *columns):
         entropies[column] = normalizedEntropy
     return entropies
 
-# High mutual information indicates a large reduction in uncertainty;
-# low mutual information indicates a small reduction;
-# and zero mutual information between two random variables means the
-# variables are independent.
-def calcMutualInformation(df, *columns):
+def calcIndividualAndJointPorbablities(df, *columns):
     n = df.count()
     individualProbs = {}
     # Key: column, value: list of distinct values
@@ -75,7 +71,14 @@ def calcMutualInformation(df, *columns):
         vals = tuple([(column, row[column]) for column in columns])
         prob = row['prob']
         jointProbs[vals] = prob
+    return individualProbs, jointProbs
 
+# High mutual information indicates a large reduction in uncertainty;
+# low mutual information indicates a small reduction;
+# and zero mutual information between two random variables means the
+# variables are independent.
+def calcMutualInformation(df, *columns):
+    individualProbs, jointProbs = calcIndividualAndJointPorbablities(df, *columns)
     mutualInformation = 0
     for k, v in jointProbs.items():
         jointProb = v
@@ -84,6 +87,16 @@ def calcMutualInformation(df, *columns):
         mutualInformation += g
 
     return mutualInformation
+
+def calcPointwiseMutualInformation(df, *columns):
+    individualProbs, jointProbs = calcIndividualAndJointPorbablities(df, *columns)
+    pmi = {}
+    for k, v in jointProbs.items():
+        jointProb = v
+        indProbs = [individualProbs[ind] for ind in k]
+        g = math.log(jointProb / reduce((lambda x, y: x * y), indProbs))
+        pmi[k] = g
+    return pmi
 
 def calcNormalizedMutualInformation(df, col1, col2):
     entropies = calcEntropy(df, col1, col2)

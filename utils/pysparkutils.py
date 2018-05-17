@@ -38,6 +38,19 @@ def calcEntropy(df, *columns):
         entropies[column] = entropy(probs)
     return entropies
 
+def calcNormalizedEntropy(df, *columns):
+    n = df.count()
+    entropies = {}
+    for column in columns:
+        distinct = df.agg(countDistinct(column)).collect()[0][0]
+        aggr = df.groupby(column).count()
+        rows = aggr.select((col('count') / n).alias('prob')).collect()
+        probs = [row[0] for row in rows]
+        entropy = scipy.stats.entropy(probs)
+        normalizedEntropy = entropy / math.log(distinct)
+        entropies[column] = normalizedEntropy
+    return entropies
+
 # High mutual information indicates a large reduction in uncertainty;
 # low mutual information indicates a small reduction;
 # and zero mutual information between two random variables means the

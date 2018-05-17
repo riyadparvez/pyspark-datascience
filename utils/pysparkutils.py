@@ -37,13 +37,14 @@ class FrozenDict(collections.Mapping):
                 self._hash ^= hash(pair)
         return self._hash
 
-
+# Returns (null column, fraction of missing values)
 def findMissingValuesCols(df):
+    n = df.count()
     nullCols = []
     for column in df.columns:
         c = df.filter(col(column).isNull()).count()
         if c > 0:
-            nullCols.append(c)
+            nullCols.append((column, c/float(n)))
     return nullCols
 
 def autoIndexer(df, maxDistinct):

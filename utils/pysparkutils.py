@@ -170,20 +170,23 @@ def crosstabPercentage(df, col1, col2):
              .orderBy(col1, col2)
     return df4
 
-def autoIndexer(df, lableCol, outputCol='assembled'):
+def autoIndexer(df, labelCol, maxDistinct=None, outputCol='assembled'):
     stringTypes = [dtype[0] for dtype in df.dtypes if dtype[1] == 'string']
-    stringTypes.remove(lableCol)
-    indexedTypes = []
-    indexers = []
+    stringTypes.remove(labelCol)
 
-    for column in stringTypes:
-        distinctCount = df.select(column).distinct().count()
-        if distinctCount < maxDistinct:
-            indexedCol = 'indexed' + column
-            indexedCols.append(indexedCol)
-            indexer = StringIndexer(inputCol=column, outputCol=indexedCol)
-            indexers.append(indexer)
+    if maxDistinct:
+        indexers = []
+        for column in stringTypes:
+            distinctCount = df.select(column).distinct().count()
+            if distinctCount < maxDistinct:
+                indexedCol = 'indexed' + column
+                indexedCols.append(indexedCol)
+                indexer = StringIndexer(inputCol=column, outputCol=indexedCol)
+                indexers.append(indexer)
+    else:
+        indexers = [StringIndexer(inputCol=column, outputCol='indexed'+column) for column in stringTypes]
 
+    indexedTypes = ['indexed'+column for column in stringTypes]
     oheTypes = [indexedType+'oneHotEncoded' for indexedType in indexedTypes]
     ohe = OneHotEncoderEstimator(inputCols=indexedTypes, outputCols=oheTypes)
     assembler = VectorAssembler(inputCols=oheTypes, outputCol=outputCol)

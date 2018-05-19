@@ -19,6 +19,7 @@ Complete notebooks are:
 
 * [Titanic](https://nbviewer.jupyter.org/github/riyadparvez/pyspark-notebooks/blob/master/titanic/spark.ipynb)
 * [Wine Quality](https://nbviewer.jupyter.org/github/riyadparvez/pyspark-notebooks/blob/master/wine-quality/spark.ipynb)
+* [Income](https://nbviewer.jupyter.org/github/riyadparvez/pyspark-notebooks/blob/master/income/spark.ipynb)
 
 # Datasets
 

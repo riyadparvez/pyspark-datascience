@@ -1,6 +1,6 @@
 from functools import reduce
 from pyspark.ml.feature import StringIndexer
-from pyspark.sql.functions import col, countDistinct, lit, mean, stddev_pop, udf
+from pyspark.sql.functions import col, countDistinct, format_number, lit, mean, stddev_pop, udf
 from pyspark.sql.types import DoubleType
 
 import math
@@ -174,6 +174,14 @@ def stratifiedSampling(df, key: str, fraction: float, seed=42):
     first = df.sampleBy(key, fractions, seed)
     second = df.subtract(first)
     return first, second
+
+def crosstabPercentage(df, col1, col2):
+    df2 = df.groupby(col1, col2).count().alias("df2")
+    df3 = df.groupby(col1).count().alias("df3")
+    df4 = df2.join(df3, df2[col1] == df3[col1], 'inner')\
+             .select('df2.*', (col('df2.count') / col('df3.count')*100).alias('percentage'))\
+             .orderBy(col1, col2)
+    return df4
 
 def dictToPandasDF(dictionary, *columns):
     return pd.DataFrame(list(dictionary.items()), columns=[*columns])

@@ -17,9 +17,9 @@ Please see the documentation of official jupyter docker image for more usage.
 Most of the notebooks are WIP.
 Complete notebooks are:
 
-* [Titanic](https://nbviewer.jupyter.org/github/riyadparvez/pyspark-notebooks/blob/master/titanic/spark.ipynb)
-* [Wine Quality](https://nbviewer.jupyter.org/github/riyadparvez/pyspark-notebooks/blob/master/wine-quality/spark.ipynb)
-* [Income](https://nbviewer.jupyter.org/github/riyadparvez/pyspark-notebooks/blob/master/income/spark.ipynb)
+* [Titanic](https://nbviewer.jupyter.org/github/riyadparvez/pyspark-notebooks/blob/master/titanic/spark.ipynb?flush_cache=true)
+* [Wine Quality](https://nbviewer.jupyter.org/github/riyadparvez/pyspark-notebooks/blob/master/wine-quality/spark.ipynb?flush_cache=true)
+* [Income](https://nbviewer.jupyter.org/github/riyadparvez/pyspark-notebooks/blob/master/income/spark.ipynb?flush_cache=true)
 
 # Datasets
 

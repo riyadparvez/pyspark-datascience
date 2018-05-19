@@ -1,7 +1,8 @@
 from functools import reduce
-from pyspark.ml.feature import StringIndexer
+from pyspark.ml.feature import OneHotEncoderEstimator, StringIndexer, VectorAssembler
 from pyspark.sql.functions import col, countDistinct, format_number, lit, mean, stddev_pop, udf
 from pyspark.sql.types import DoubleType
+from pyspark.ml import Pipeline
 
 import math
 import numpy as np
@@ -47,20 +48,6 @@ def findMissingValuesCols(df):
         if c > 0:
             nullCols.append((column, c/float(n)))
     return nullCols
-
-def autoIndexer(df, maxDistinct):
-    stringTypes = [dtype[0] for dtype in df.dtypes if dtype[1] == 'string']
-    indexed = df
-    indexedCols = []
-    for column in stringTypes:
-        distinctCount = df.select(column).distinct().count()
-        if distinctCount < maxDistinct:
-            indexedCol = 'Indexed' + column
-            indexedCols.append(indexedCol)
-            indexer = StringIndexer(inputCol=column, outputCol=indexedCol)
-            indexed = indexer.fit(indexed).transform(indexed)
-            indexed = indexed.drop(column)
-    return indexedCols, indexed
 
 def calcEntropy(df, *columns):
     n = df.count()
@@ -182,6 +169,27 @@ def crosstabPercentage(df, col1, col2):
              .select('df2.*', (col('df2.count') / col('df3.count')*100).alias('percentage'))\
              .orderBy(col1, col2)
     return df4
+
+def autoIndexer(df, lableCol, outputCol='assembled'):
+    stringTypes = [dtype[0] for dtype in df.dtypes if dtype[1] == 'string']
+    stringTypes.remove(lableCol)
+    indexedTypes = []
+    indexers = []
+
+    for column in stringTypes:
+        distinctCount = df.select(column).distinct().count()
+        if distinctCount < maxDistinct:
+            indexedCol = 'indexed' + column
+            indexedCols.append(indexedCol)
+            indexer = StringIndexer(inputCol=column, outputCol=indexedCol)
+            indexers.append(indexer)
+
+    oheTypes = [indexedType+'oneHotEncoded' for indexedType in indexedTypes]
+    ohe = OneHotEncoderEstimator(inputCols=indexedTypes, outputCols=oheTypes)
+    assembler = VectorAssembler(inputCols=oheTypes, outputCol=outputCol)
+    pipeline = Pipeline(stages=[*indexers, ohe, assembler])
+    indexed = pipeline.fit(df).transform(df)
+    return stringTypes, oheTypes, indexed
 
 def dictToPandasDF(dictionary, *columns):
     return pd.DataFrame(list(dictionary.items()), columns=[*columns])

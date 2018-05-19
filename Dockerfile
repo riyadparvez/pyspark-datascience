@@ -5,7 +5,7 @@ LABEL maintainer="riyad.parvez@gmail.com"
 USER root
 
 RUN apt-get -y update && \
-    apt-get install --no-install-recommends -y ssh openssh-server openssh-client && \
+    apt-get install --no-install-recommends -y ssh openssh-server openssh-client libblas-dev liblapack-dev gfortran && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

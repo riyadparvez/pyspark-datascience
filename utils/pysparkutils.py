@@ -1,6 +1,7 @@
 from functools import reduce
 from pyspark.ml.feature import StringIndexer
-from pyspark.sql.functions import col, countDistinct, lit
+from pyspark.sql.functions import col, countDistinct, lit, mean, stddev_pop, udf
+from pyspark.sql.types import DoubleType
 
 import math
 import numpy as np
@@ -153,20 +154,31 @@ def calcNormalizedPointwiseMutualInformationPandas(df, *columns):
         print(l)
         # for  in k.values():
 
-def calcNormalizedMutualInformation(df, col1, col2) -> float:
+def calcNormalizedMutualInformation(df, col1: str, col2: str) -> float:
     entropies = calcEntropy(df, col1, col2)
     return (2* calcMutualInformation(df, col1, col2) / reduce(lambda x, y: x+y, entropies.values()))
 
-def stratifiedSampling(df, key, fraction):
+
+def calcZScore(df, column: str, outputCol='zScore'):
+    avg = df.agg(mean(column)).head()[0]
+    stddev = df.agg(stddev_pop(column)).head()[0]
+
+    def z_score(val):
+        return (val-avg)/stddev
+
+    df = df.withColumn(outputCol, udf(z_score, DoubleType())(data[df]))
+    return df
+
+def stratifiedSampling(df, key: str, fraction: float, seed=42):
     fractions = df.select(key).distinct().withColumn("fraction", lit(fraction)).rdd.collectAsMap()
-    first = df.sampleBy(key, fractions, 42)
+    first = df.sampleBy(key, fractions, seed)
     second = df.subtract(first)
     return first, second
 
 def dictToPandasDF(dictionary, *columns):
     return pd.DataFrame(list(dictionary.items()), columns=[*columns])
 
-def toPandasDF(dictionary, targetCol, *columns):
+def toPandasDF(dictionary, targetCol: str, *columns):
     dfCols =  [*columns, targetCol]
     rows = []
     for k, val in dictionary.items():

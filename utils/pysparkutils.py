@@ -194,6 +194,8 @@ def autoIndexer(df, labelCol, maxDistinct=None, outputCol='assembled'):
     indexed = pipeline.fit(df).transform(df)
     return stringTypes, oheTypes, indexed
 
+
+
 def dictToPandasDF(dictionary, *columns):
     return pd.DataFrame(list(dictionary.items()), columns=[*columns])
 

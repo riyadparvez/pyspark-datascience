@@ -153,7 +153,7 @@ def calcZScore(df, column: str, outputCol='zScore'):
     def z_score(val):
         return (val-avg)/stddev
 
-    df = df.withColumn(outputCol, udf(z_score, DoubleType())(data[df]))
+    df = df.withColumn(outputCol, udf(z_score, DoubleType())(df[column]))
     return df
 
 def stratifiedSampling(df, key: str, fraction: float, seed=42):
@@ -194,7 +194,19 @@ def autoIndexer(df, labelCol, maxDistinct=None, outputCol='assembled'):
     indexed = pipeline.fit(df).transform(df)
     return stringTypes, oheTypes, indexed
 
+def attributeValueFrequency(df, categoricalCols, outputCol='avfScore'):
+    for column in categoricalCols:
+        grouped = df.groupby(column).count().select(column, 'count')
+        grouped = grouped.withColumnRenamed('count', column+'Count').alias('grouped')
+        c = 'grouped.'+column+'Count'
+        df = df.alias('df').join(grouped, df[column] == grouped[column], 'inner')\
+                    .select('df.*', c)
+    countCols = [column+'Count' for column in categoricalCols]
+    colCols = [col(column) for column in countCols]
+    expression = reduce(lambda x, y: x + y, colCols)
 
+    df = df.withColumn(outputCol, expression).drop(*countCols)
+    return df
 
 def dictToPandasDF(dictionary, *columns):
     return pd.DataFrame(list(dictionary.items()), columns=[*columns])
